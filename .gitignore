@@ -132,3 +132,9 @@ python/_cstruc_ffi.c
 bridge_demo
 encode_demo
 ntt_smoketest
+
+# CKKS demos
+he_demo
+he_add_demo
+he_demo_asan
+
