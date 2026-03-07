@@ -71,7 +71,7 @@ int main(void)
   poly_free(b);
   poly_free(c);
 
-  /* q 是 stack init，不需要 free；如果你們有 _int_clear 也可呼叫，但通常可省略 */
+  /* q 是 stack init，不需要 free */
 
   return 0;
 }
