@@ -5,7 +5,7 @@
 
 #include "lazer.h"
 #include "module_lwe_pke.h"
-#include "../../python/demo/demo_params.h"
+#include "demo_params.h"
 
 static void randbytes(uint8_t *buf, size_t n) {
   for (size_t i = 0; i < n; i++) {
