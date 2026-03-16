@@ -28,3 +28,39 @@ g++ module_lwe_pke.o module_lwe_pke_bench.o -L. -llazer ./third_party/hexl-devel
 
 # Run the benchmark
 LD_LIBRARY_PATH=. ./lwe_bench
+
+## How to use (Makefile targets)
+Run these commands from the repository root.
+
+1. Build the base `lazer` library:
+
+make
+
+2. Build the PKE module and its tools:
+
+make -f Makefile.pke
+
+
+3. Run the test suite:
+
+make -f Makefile.pke test
+./lwe_test
+
+
+4. Run the benchmark:
+
+make -f Makefile.pke bench
+./bench_pke
+
+5. Run the Python demos:
+
+make -f Makefile.pke demo
+make -f Makefile.pke input
+make -f Makefile.pke sentence
+
+6. Clean PKE build artifacts:
+
+make -f Makefile.pke clean
+
+
+
