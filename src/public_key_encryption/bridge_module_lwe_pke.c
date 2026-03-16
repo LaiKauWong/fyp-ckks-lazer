@@ -158,3 +158,14 @@ int bridge_decrypt(module_lwe_engine_t *engine,
                            ct->ct,
                            engine->sk);
 }
+
+//message capacity
+size_t bridge_msg_capacity_bits(module_lwe_engine_t *engine) {
+    if (engine == NULL) return 0;
+    return lwe_pke_msg_capacity_bits(engine->ctx);
+}
+
+size_t bridge_msg_capacity_bytes(module_lwe_engine_t *engine) {
+    if (engine == NULL) return 0;
+    return lwe_pke_msg_capacity_bytes(engine->ctx);
+}

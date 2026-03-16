@@ -33,6 +33,9 @@ int bridge_decrypt(module_lwe_engine_t *engine,
                    uint8_t *msg_out,
                    size_t msg_bitlen);
 
+size_t bridge_msg_capacity_bits(module_lwe_engine_t *engine);
+size_t bridge_msg_capacity_bytes(module_lwe_engine_t *engine);
+
 #ifdef __cplusplus
 }
 #endif

@@ -81,6 +81,10 @@ int lwe_pke_decrypt(const lwe_pke_ctx_t ctx,
                     const lwe_pke_ct_t ct,
                     const lwe_pke_sk_t sk);
 
+//message capacity
+size_t lwe_pke_msg_capacity_bits(const lwe_pke_ctx_t ctx);
+size_t lwe_pke_msg_capacity_bytes(const lwe_pke_ctx_t ctx);
+
 #ifdef __cplusplus
 }
 #endif

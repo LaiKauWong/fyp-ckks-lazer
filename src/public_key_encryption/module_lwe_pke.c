@@ -266,3 +266,20 @@ int lwe_pke_decrypt(const lwe_pke_ctx_t ctx,
 
   return rc;
 }
+
+size_t lwe_pke_msg_capacity_bits(const lwe_pke_ctx_t ctx) {
+  if (ctx == NULL || ctx->ring == NULL) return 0;
+
+  poly_t tmp;
+  poly_alloc(tmp, ctx->ring);
+
+  size_t ncoeffs = intvec_get_nelems(tmp->coeffs);
+
+  poly_free(tmp);
+  return ncoeffs;
+}
+
+size_t lwe_pke_msg_capacity_bytes(const lwe_pke_ctx_t ctx) {
+  size_t bits = lwe_pke_msg_capacity_bits(ctx);
+  return (bits + 7) / 8;
+}
