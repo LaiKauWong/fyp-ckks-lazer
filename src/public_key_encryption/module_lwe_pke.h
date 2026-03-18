@@ -15,20 +15,22 @@ typedef struct {
   unsigned int log2q;       // bit-length of modulus for urandom APIs
   int eta;                  // small-noise parameter
 } lwe_pke_ctx_struct;
-
 typedef lwe_pke_ctx_struct lwe_pke_ctx_t[1];
 
+//public key
 typedef struct {
   polymat_t A;   // k x k
   polyvec_t b;   // k
 } lwe_pke_pk_struct;
 typedef lwe_pke_pk_struct lwe_pke_pk_t[1];
 
+//secret key
 typedef struct {
   polyvec_t s;   // k
 } lwe_pke_sk_struct;
 typedef lwe_pke_sk_struct lwe_pke_sk_t[1];
 
+//ciphertext
 typedef struct {
   polyvec_t u;   // k
   poly_t v;      // 1 polynomial
@@ -50,7 +52,7 @@ void lwe_pke_pk_free(lwe_pke_pk_t pk);
 void lwe_pke_sk_free(lwe_pke_sk_t sk);
 void lwe_pke_ct_free(lwe_pke_ct_t ct);
 
-// --- encode / decode ---
+//encode / decode 
 int lwe_pke_encode_bits_poly(const lwe_pke_ctx_t ctx,
                              poly_t m,
                              const uint8_t *msg,
@@ -61,7 +63,7 @@ int lwe_pke_decode_poly_bits(const lwe_pke_ctx_t ctx,
                              size_t msg_bits,
                              poly_t mrec);
 
-// --- core API ---
+//core API
 int lwe_pke_keygen(const lwe_pke_ctx_t ctx,
                    lwe_pke_pk_t pk,
                    lwe_pke_sk_t sk,

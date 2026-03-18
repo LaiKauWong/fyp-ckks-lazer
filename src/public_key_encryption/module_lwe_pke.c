@@ -6,25 +6,27 @@ static void poly_copy_fallback(poly_ptr dst, poly_t src) {
   poly_set(dst, src);
 }
 
+//local helper for <x,y>
 static void polyvec_dot_local(poly_t out, polyvec_t x, polyvec_t y) {
-  size_t k = polyvec_get_nelems(x);
+  size_t k = polyvec_get_nelems(x);  //k elements of polyvec x
   poly_set_zero(out);
 
   poly_t tmp;
-  poly_alloc(tmp, polyvec_get_ring(x));
+  poly_alloc(tmp, polyvec_get_ring(x)); //set new poly tmp which has same poly ring as x
 
   for (size_t i = 0; i < k; i++) {
     poly_srcptr xi = polyvec_get_elem_src(x, i);
     poly_srcptr yi = polyvec_get_elem_src(y, i);
     // [Fix] Cast to (void *) to explicitly silence const warnings
     poly_mul(tmp, (void *)xi, (void *)yi);
-    poly_add(out, out, tmp, 0);
+    poly_add(out, out, tmp, 0); //out = out + tmp
   }
 
-  poly_mod(out, out);
+  poly_mod(out, out); //modulus 
   poly_free(tmp);
 }
 
+//out = A . s
 static void polymat_mul_vec_local(polyvec_t out, polymat_t A, polyvec_t s) {
   size_t nrows = polymat_get_nrows(A);
   size_t ncols = polymat_get_ncols(A);
@@ -49,9 +51,10 @@ static void polymat_mul_vec_local(polyvec_t out, polymat_t A, polyvec_t s) {
   poly_free(tmp);
 }
 
+//out = A^T . r
 static void polymat_transpose_mul_vec_local(polyvec_t out, polymat_t A, polyvec_t r) {
-  size_t nrows = polymat_get_nrows(A);
-  size_t ncols = polymat_get_ncols(A);
+  size_t nrows = polymat_get_nrows(A); //rows size
+  size_t ncols = polymat_get_ncols(A); //col size
 
   poly_t acc, tmp;
   poly_alloc(acc, polyvec_get_ring(r));
@@ -73,7 +76,7 @@ static void polymat_transpose_mul_vec_local(polyvec_t out, polymat_t A, polyvec_
   poly_free(tmp);
 }
 
-// Public API
+// Setup
 int lwe_pke_ctx_init(lwe_pke_ctx_t ctx, const polyring_t *ring,
                      size_t k, unsigned int log2q, int eta) {
   if (ctx == NULL || ring == NULL) return -1;
@@ -121,6 +124,10 @@ void lwe_pke_ct_free(lwe_pke_ct_t ct) {
   poly_free(ct->v);
 }
 
+// Encodes a binary message into a polynomial over the target ring.
+// For each message bit, coefficient i is set to either 0 or q/2,
+// enabling threshold-based recovery during decryption.
+// At most one bit is stored per polynomial coefficient.
 int lwe_pke_encode_bits_poly(const lwe_pke_ctx_t ctx, poly_t m,
                              const uint8_t *msg, size_t msg_bits) {
   if (ctx == NULL || ctx->ring == NULL || m == NULL || msg == NULL) return -1;
