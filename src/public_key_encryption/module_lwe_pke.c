@@ -137,9 +137,10 @@ int lwe_pke_encode_bits_poly(const lwe_pke_ctx_t ctx, poly_t m,
 
   poly_set_zero(m);
 
-  int64_t q_i64 = int_get_i64((*ctx->ring)->q);
+  int64_t q_i64 = int_get_i64((*ctx->ring)->q); //get modulus q from ring and convert to int64
   int64_t half = q_i64 / 2;
 
+  //0bit->0, 1 bit->q/2
   for (size_t i = 0; i < msg_bits; i++) {
     uint8_t bit = (msg[i >> 3] >> (i & 7)) & 1u;
     int64_t coeff = bit ? half : 0;
@@ -150,6 +151,7 @@ int lwe_pke_encode_bits_poly(const lwe_pke_ctx_t ctx, poly_t m,
   return 0;
 }
 
+//polynomial coefficient → bit
 int lwe_pke_decode_poly_bits(const lwe_pke_ctx_t ctx, uint8_t *msg_out,
                              size_t msg_bits, poly_t mrec) {
   if (ctx == NULL || ctx->ring == NULL || msg_out == NULL || mrec == NULL) return -1;
@@ -164,13 +166,13 @@ int lwe_pke_decode_poly_bits(const lwe_pke_ctx_t ctx, uint8_t *msg_out,
 
   for (size_t i = 0; i < msg_bits; i++) {
     int64_t x = intvec_get_elem_i64(mrec->coeffs, i);
-
+    //normalize x to [0,q)
     int64_t xm = x % q;
     if (xm < 0) xm += q;
-
+    //get distance to 0
     int64_t d0 = xm;
     if (d0 > q - d0) d0 = q - d0;
-
+    //get distance to q/2
     int64_t t = xm - half;
     t %= q;
     if (t < 0) t += q;
@@ -183,6 +185,9 @@ int lwe_pke_decode_poly_bits(const lwe_pke_ctx_t ctx, uint8_t *msg_out,
   return 0;
 }
 
+// Generate a Module-LWE keypair:
+// sample public matrix A, secret vector s, and error vector e,
+// then compute b = A*s + e so that pk = (A, b) and sk = s.
 int lwe_pke_keygen(const lwe_pke_ctx_t ctx,
                    lwe_pke_pk_t pk, lwe_pke_sk_t sk,
                    const uint8_t seedA[32], const uint8_t seedS[32]) {
@@ -192,7 +197,7 @@ int lwe_pke_keygen(const lwe_pke_ctx_t ctx,
   polymat_urandom((void *)pk->A, (*ctx->ring)->q, ctx->log2q, (void *)seedA, 0);
   polyvec_brandom((void *)sk->s, ctx->eta, (void *)seedS, 0);
 
-  polyvec_t e;
+  polyvec_t e; //error vector
   polyvec_alloc(e, *ctx->ring, ctx->k);
   polyvec_brandom(e, ctx->eta, (void *)seedS, 1);
 
@@ -208,6 +213,9 @@ int lwe_pke_keygen(const lwe_pke_ctx_t ctx,
   return 0;
 }
 
+// Encrypt a binary message into a Module-LWE ciphertext:
+// encode the message into polynomial m, sample secret vector r and errors e1, e2,
+// then compute u = A^T * r + e1 and v = b^T * r + e2 + m so that ct = (u, v).
 int lwe_pke_encrypt(const lwe_pke_ctx_t ctx,
                     lwe_pke_ct_t ct, const lwe_pke_pk_t pk,
                     const uint8_t *msg, size_t msg_bits,
@@ -234,13 +242,13 @@ int lwe_pke_encrypt(const lwe_pke_ctx_t ctx,
   polyvec_brandom(e1, ctx->eta, (void *)seedE, 1);
   poly_brandom(e2,    ctx->eta, (void *)seedE, 2);
 
-  polymat_transpose_mul_vec_local((void *)ct->u, (void *)pk->A, r);
-  polyvec_add((void *)ct->u, (void *)ct->u, e1, 0);
+  polymat_transpose_mul_vec_local((void *)ct->u, (void *)pk->A, r); //u=A^T*r
+  polyvec_add((void *)ct->u, (void *)ct->u, e1, 0); //u=u+e1
 
-  polyvec_dot_local(br, (void *)pk->b, r);
-  poly_add((void *)ct->v, br, e2, 0);
-  poly_add((void *)ct->v, (void *)ct->v, m, 0);
-  poly_mod((void *)ct->v, (void *)ct->v);
+  polyvec_dot_local(br, (void *)pk->b, r); //br = <b,r>
+  poly_add((void *)ct->v, br, e2, 0); //v=⟨b,r⟩+e2​
+  poly_add((void *)ct->v, (void *)ct->v, m, 0); //v=⟨b,r⟩+e2​+m
+  poly_mod((void *)ct->v, (void *)ct->v); 
 
   polyvec_free(r);
   polyvec_free(e1);
@@ -251,6 +259,9 @@ int lwe_pke_encrypt(const lwe_pke_ctx_t ctx,
   return 0;
 }
 
+// Decrypt a Module-LWE ciphertext by computing
+// m' = v - <s, u>, then decode the recovered
+// polynomial back into the output bitstring.
 int lwe_pke_decrypt(const lwe_pke_ctx_t ctx,
                     uint8_t *msg_out, size_t msg_bits,
                     const lwe_pke_ct_t ct, const lwe_pke_sk_t sk) {
@@ -261,9 +272,9 @@ int lwe_pke_decrypt(const lwe_pke_ctx_t ctx,
   poly_alloc(mrec, *ctx->ring);
 
   // [Fix] Const cast for Lazer passing
-  polyvec_dot_local(su, (void *)sk->s, (void *)ct->u);
+  polyvec_dot_local(su, (void *)sk->s, (void *)ct->u); //⟨s,u⟩
 
-  poly_sub(mrec, (void *)ct->v, su, 0);
+  poly_sub(mrec, (void *)ct->v, su, 0); //v−⟨s,u⟩
   poly_mod(mrec, mrec);
 
   int rc = lwe_pke_decode_poly_bits(ctx, msg_out, msg_bits, mrec);
@@ -274,6 +285,8 @@ int lwe_pke_decrypt(const lwe_pke_ctx_t ctx,
   return rc;
 }
 
+// Return the maximum number of message bits that can be encoded
+// in a single polynomial, assuming one bit is stored per coefficient.
 size_t lwe_pke_msg_capacity_bits(const lwe_pke_ctx_t ctx) {
   if (ctx == NULL || ctx->ring == NULL) return 0;
 
@@ -286,6 +299,7 @@ size_t lwe_pke_msg_capacity_bits(const lwe_pke_ctx_t ctx) {
   return ncoeffs;
 }
 
+//maximum message capacity in bytes
 size_t lwe_pke_msg_capacity_bytes(const lwe_pke_ctx_t ctx) {
   size_t bits = lwe_pke_msg_capacity_bits(ctx);
   return (bits + 7) / 8;
