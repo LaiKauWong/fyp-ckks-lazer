@@ -138,3 +138,10 @@ he_demo
 he_add_demo
 he_demo_asan
 
+# Build artifacts
+bench_pke
+lwe_bench
+lwe_test
+*.o
+*.so
+*.a
