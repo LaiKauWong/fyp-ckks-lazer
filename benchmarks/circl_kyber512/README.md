@@ -95,9 +95,11 @@ comparison is made at the level of benchmark methodology and core operation
 timing rather than by matching identical internal scheme parameters.
 
 ## Example Output
-=========================================================
+
+```text
+============================================================
 CIRCL Kyber512 CPAPKE Benchmark
-=========================================================
+============================================================
 Scheme                : Kyber512.CPAPKE
 Plaintext size        : 256 bits (32 bytes)
 Public key size       : 800 bytes
@@ -106,8 +108,9 @@ Ciphertext size       : 768 bytes
 Encryption seed size  : 32 bytes
 Benchmark trials      : 1000
 Warmup trials         : 50
-=========================================================
+============================================================
 KeyGen (ms)           : 0.014107
 Encrypt (ms)          : 0.006979
 Decrypt (ms)          : 0.001668
-=========================================================
+============================================================
+```
