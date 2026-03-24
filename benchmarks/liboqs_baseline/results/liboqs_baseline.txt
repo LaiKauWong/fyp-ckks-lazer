@@ -1,0 +1,54 @@
+Operation                            | Iterations | Total time (s) | Time (us): mean | CPU cycles: mean
+------------------------------------ | ----------:| --------------:| ---------------:| -----------------:
+FrodoKEM-640-AES                     |            |                |                 |                   
+keygen                               |      14109 |          3.000 |         212.632 |           478361
+encaps                               |      10397 |          3.000 |         288.556 |           649200
+decaps                               |      10869 |          3.000 |         276.017 |           620993
+Kyber512                             |            |                |                 |                   
+keygen                               |     583921 |          3.000 |           5.138 |            11491
+encaps                               |     460836 |          3.000 |           6.510 |            14579
+decaps                               |     681581 |          3.000 |           4.402 |             9836
+
+#### 文件路径：`benchmarks/liboqs_baseline/results/liboqs_baseline.txt`
+
+=========================================================
+liboqs KEM Benchmark (Converted Summary)
+=========================================================
+Environment           : AMD EPYC 9K65 (2.25 GHz)
+Shared secret size    : 256 bits (32 bytes)
+Benchmark trials      : 3.000 seconds continuous loop
+=========================================================
+[Kyber512]
+KeyGen (ms)           : 0.005107
+Encaps (ms)           : 0.006479
+Decaps (ms)           : 0.004371
+---------------------------------------------------------
+[FrodoKEM-640-AES]
+KeyGen (ms)           : 0.212604
+Encaps (ms)           : 0.288533
+Decaps (ms)           : 0.275996
+=========================================================
+
+CSV:
+scheme,msg_bits,keygen_ms,encrypt_ms,decrypt_ms
+liboqs_kyber512,256,0.005107,0.006479,0.004371
+liboqs_frodokem640,256,0.212604,0.288533,0.275996
+
+=========================================================
+Raw Output Dump
+=========================================================
+Configuration info
+Target platform:  x86_64-Linux-6.8.0-101-generic
+Compile options:  [-Wa,--noexecstack;-O3;-fomit-frame-pointer;-fdata-sections;-ffunction-sections;-Wl,--gc-sections;-Wbad-function-cast]
+CPU exts active:  ADX AES AVX AVX2 AVX512 BMI1 BMI2 PCLMULQDQ VPCLMULQDQ POPCNT SSE SSE2 SSE3
+
+Operation                            | Iterations | Total time (s) | Time (us): mean | CPU cycles: mean
+------------------------------------ | ----------:| --------------:| ---------------:| -----------------:
+FrodoKEM-640-AES                     |            |                |                 |                   
+keygen                               |      14109 |          3.000 |         212.632 |           478361
+encaps                               |      10397 |          3.000 |         288.556 |           649200
+decaps                               |      10869 |          3.000 |         276.017 |           620993
+Kyber512                             |            |                |                 |                   
+keygen                               |     583921 |          3.000 |           5.138 |            11491
+encaps                               |     460836 |          3.000 |           6.510 |            14579
+decaps                               |     681581 |          3.000 |           4.402 |             9836
