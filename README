@@ -1,0 +1,81 @@
+# Final Year Project (FYP): Extending LaZer with a Module-LWE Public-Key Encryption Module
+
+## Overview
+This repository contains our final-year project work built on top of the LaZer cryptographic library.
+Our current focus is the implementation of a reusable Module-LWE public-key encryption (PKE) module using LaZer’s algebra primitives, together with testing, benchmarking, and Python demo support.  
+
+
+## Relationship to LaZer
+This project is built on top of the LaZer cryptographic library.
+The original LaZer codebase serves as the upstream foundation, while our FYP work extends it with additional scheme-layer functionality.
+
+## Our main contributions
+- `src/public_key_encryption/` — core Module-LWE PKE implementation
+- `python/public_key_encryption/` — Python wrapper and demo scripts for PKE
+- `Makefile.pke` — dedicated build support for PKE-related components
+
+## Where to look first
+For our main FYP contributions, start with:
+- `src/public_key_encryption/`
+- `python/public_key_encryption/`
+- `Makefile.pke`
+
+## Where to look first
+For our main FYP contributions, start with:
+- `src/public_key_encryption/`
+- `python/public_key_encryption/`
+- `Makefile.pke`
+
+## Repository guide
+- `src/public_key_encryption/` — main PKE implementation, test, and benchmark drivers
+- `python/public_key_encryption/` — PKE Python demos
+- `tests/` — original LaZer test suite
+- `docs/` — upstream documentation and related materials
+
+For a higher-level summary of the project, see `docs/project_overview.md`.
+
+
+## Build and run
+
+### Build the main library
+
+```bash
+make 
+```
+
+### Build PKE-related components
+
+```bash
+make -f Makefile.pke
+```
+
+### Run PKE test
+
+```bash
+./lwe_test
+```
+
+### Run PKE benchmark
+
+```bash
+./lwe_bench
+```
+
+### Run Python PKE demo
+
+```bash
+python3 python/public_key_encryption/demo_sentence.py
+```
+
+## Notes
+
+- The project goal is primarily to extend LaZer with missing scheme-layer functionality.
+- The current focus is on clean integration, modular implementation, and fair comparison with similar implementations.
+- Performance leadership over mature libraries is not the main objective.
+
+
+## Upstream note
+This project is built on top of LaZer and preserves the upstream codebase as the underlying foundation.
+Our work focuses on extending LaZer with additional scheme-layer functionality rather than replacing the original library.
+For upstream context and documentation, see the local materials under `docs/`.
+

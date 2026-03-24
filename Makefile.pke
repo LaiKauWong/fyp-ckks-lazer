@@ -1,0 +1,81 @@
+# =========================================================
+# Makefile.pke
+# Build only the public_key_encryption module
+# Does NOT modify upstream python/demo or other source files
+# =========================================================
+
+CC  := gcc
+CXX := g++
+
+CFLAGS   := -fPIC -O3 -I. -Ipython/demo
+CXXFLAGS := -O3 -I. -Ipython/demo
+
+RPATH    := -Wl,-rpath,'$$ORIGIN'
+LDFLAGS  := -L. -llazer $(RPATH)
+LDLIBS   := ./third_party/hexl-development/build/hexl/lib/libhexl.a -lmpfr -lgmp -lm
+
+SRC_DIR := src/public_key_encryption
+PY_DIR  := python/public_key_encryption
+
+CORE_SRC   := $(SRC_DIR)/module_lwe_pke.c
+BRIDGE_SRC := $(SRC_DIR)/bridge_module_lwe_pke.c
+TEST_SRC   := $(SRC_DIR)/module_lwe_pke_test.c
+BENCH_SRC  := $(SRC_DIR)/module_lwe_pke_bench.c
+
+CORE_OBJ   := module_lwe_pke.o
+BRIDGE_OBJ := bridge_module_lwe_pke.o
+TEST_OBJ   := module_lwe_pke_test.o
+BENCH_OBJ  := module_lwe_pke_bench.o
+
+SHARED_LIB := libmodule_lwe.so
+TEST_BIN   := lwe_test
+BENCH_BIN  := bench_pke
+
+.PHONY: all lib test bench demo input sentence clean check
+
+all: lib test bench
+
+check:
+	@test -f liblazer.so || (echo "Error: liblazer.so not found. Run 'make' first in repo root."; exit 1)
+	@test -f python/demo/demo_params.h || (echo "Error: python/demo/demo_params.h not found."; exit 1)
+	@test -f ./third_party/hexl-development/build/hexl/lib/libhexl.a || (echo "Error: libhexl.a not found."; exit 1)
+
+$(CORE_OBJ): $(CORE_SRC)
+	$(CC) $(CFLAGS) -DLAZER_HEXL -c $< -o $@
+
+$(BRIDGE_OBJ): $(BRIDGE_SRC)
+	$(CC) $(CFLAGS) -DLAZER_HEXL -c $< -o $@
+
+$(TEST_OBJ): $(TEST_SRC)
+	$(CC) $(CFLAGS) -DLAZER_HEXL -c $< -o $@
+
+$(BENCH_OBJ): $(BENCH_SRC)
+	$(CC) $(CFLAGS) -DLAZER_HEXL -c $< -o $@
+
+lib: check $(SHARED_LIB)
+
+$(SHARED_LIB): $(CORE_OBJ) $(BRIDGE_OBJ)
+	$(CXX) -shared -o $@ $^ $(LDFLAGS) $(LDLIBS)
+
+test: check $(TEST_BIN)
+
+$(TEST_BIN): $(CORE_OBJ) $(TEST_OBJ)
+	$(CXX) -o $@ $^ $(LDFLAGS) $(LDLIBS)
+
+bench: check $(BENCH_BIN)
+
+$(BENCH_BIN): $(CORE_OBJ) $(BENCH_OBJ)
+	$(CXX) -o $@ $^ $(LDFLAGS) $(LDLIBS)
+
+demo: lib
+	python3 $(PY_DIR)/demo_pke.py
+
+input: lib
+	python3 $(PY_DIR)/demo_input_pke.py
+
+sentence: lib
+	python3 $(PY_DIR)/demo_sentence.py
+
+clean:
+	rm -f $(CORE_OBJ) $(BRIDGE_OBJ) $(TEST_OBJ) $(BENCH_OBJ)
+	rm -f $(SHARED_LIB) $(TEST_BIN) $(BENCH_BIN)
