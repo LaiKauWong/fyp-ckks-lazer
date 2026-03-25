@@ -34,9 +34,9 @@ cd ~/fyp-ckks-lazer/benchmarks
 mkdir -p openssl_ecdh/results
 cd openssl_ecdh
 # Note: Press Ctrl+C after the 256-bit test completes
-openssl speed ecdh > results/openssl_ecdh.txt
+make clean
+make bench
 ```
-
 ## Benchmark Configuration
 Scheme: NIST P-256 (secp256r1)
 
