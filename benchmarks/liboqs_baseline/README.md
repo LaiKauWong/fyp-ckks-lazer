@@ -50,6 +50,13 @@ cd ~/fyp-ckks-lazer/benchmarks/liboqs_baseline/liboqs/build
 ./tests/speed_kem
 ```
 
+or
+
+```bash
+make clean
+make bench
+```
+
 ## Save Output
 
 ```Bash
