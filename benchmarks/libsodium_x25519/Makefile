@@ -1,13 +1,11 @@
-# Compiler settings
 CC = gcc
 CFLAGS = -O3 -march=native -Wall
-LDFLAGS = -lcrypto
+LDFLAGS = -lsodium
 
-# Files and directories
-TARGET = bench_openssl
-SRC = bench_openssl.c
+TARGET = bench_libsodium
+SRC = bench_libsodium.c
 RESULT_DIR = results
-RESULT_FILE = $(RESULT_DIR)/openssl_ecdh.txt
+RESULT_FILE = $(RESULT_DIR)/libsodium_x25519.txt
 
 .PHONY: all bench clean
 
@@ -17,7 +15,7 @@ $(TARGET): $(SRC)
 	$(CC) $(CFLAGS) $(SRC) -o $(TARGET) $(LDFLAGS)
 
 bench: $(TARGET)
-	@echo "Running OpenSSL ECDH benchmark (NIST P-256)..."
+	@echo "Running Libsodium X25519 PKE benchmark..."
 	@mkdir -p $(RESULT_DIR)
 	./$(TARGET) > $(RESULT_FILE)
 	@echo "========================================================="
