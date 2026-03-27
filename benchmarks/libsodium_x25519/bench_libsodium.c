@@ -1,5 +1,3 @@
-// benchmarks/libsodium_x25519/bench_libsodium.c
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -8,7 +6,6 @@
 
 #define WARMUP_TRIALS 50
 #define BENCHMARK_TRIALS 1000
-#define MSG_BYTES 32 // 256 bits
 
 double calc_avg_ms(struct timespec start, struct timespec end, int trials) {
     double elapsed_ns = (end.tv_sec - start.tv_sec) * 1e9 + (end.tv_nsec - start.tv_nsec);
@@ -21,60 +18,56 @@ int main() {
         return 1;
     }
 
+    int msg_sizes[] = {32, 64, 128, 256, 512, 1024};
+    int num_sizes = sizeof(msg_sizes) / sizeof(msg_sizes[0]);
     struct timespec start, end;
-    double keygen_ms, encrypt_ms, decrypt_ms;
 
-    uint8_t pk[crypto_box_PUBLICKEYBYTES];
-    uint8_t sk[crypto_box_SECRETKEYBYTES];
-    uint8_t pt[MSG_BYTES] = {0x42}; // 256-bit dummy plaintext
-    uint8_t dec[MSG_BYTES];
-    
-    size_t ct_len = MSG_BYTES + crypto_box_SEALBYTES;
-    uint8_t *ct = malloc(ct_len);
-
-    // --- KeyGen Benchmark ---
-    for(int i = 0; i < WARMUP_TRIALS; i++) crypto_box_keypair(pk, sk);
-    clock_gettime(CLOCK_MONOTONIC, &start);
-    for(int i = 0; i < BENCHMARK_TRIALS; i++) crypto_box_keypair(pk, sk);
-    clock_gettime(CLOCK_MONOTONIC, &end);
-    keygen_ms = calc_avg_ms(start, end, BENCHMARK_TRIALS);
-
-    // --- Encrypt (Seal) Benchmark ---
-    for(int i = 0; i < WARMUP_TRIALS; i++) crypto_box_seal(ct, pt, MSG_BYTES, pk);
-    clock_gettime(CLOCK_MONOTONIC, &start);
-    for(int i = 0; i < BENCHMARK_TRIALS; i++) crypto_box_seal(ct, pt, MSG_BYTES, pk);
-    clock_gettime(CLOCK_MONOTONIC, &end);
-    encrypt_ms = calc_avg_ms(start, end, BENCHMARK_TRIALS);
-
-    // --- Decrypt (Seal Open) Benchmark ---
-    for(int i = 0; i < WARMUP_TRIALS; i++) crypto_box_seal_open(dec, ct, ct_len, pk, sk);
-    clock_gettime(CLOCK_MONOTONIC, &start);
-    for(int i = 0; i < BENCHMARK_TRIALS; i++) {
-        if (crypto_box_seal_open(dec, ct, ct_len, pk, sk) != 0) {
-            printf("Decryption failed!\n");
-            return 1;
-        }
-    }
-    clock_gettime(CLOCK_MONOTONIC, &end);
-    decrypt_ms = calc_avg_ms(start, end, BENCHMARK_TRIALS);
-
-    // --- Print Report ---
-    printf("=========================================================\n");
+    printf("=========================================================================\n");
     printf("Scheme                : Libsodium X25519 (Sealed Box PKE)\n");
-    printf("Plaintext size        : %d bits (%d bytes)\n", MSG_BYTES * 8, MSG_BYTES);
-    printf("Ciphertext size       : %zu bytes\n", ct_len);
     printf("Benchmark trials      : %d\n", BENCHMARK_TRIALS);
     printf("Warmup trials         : %d\n", WARMUP_TRIALS);
-    printf("=========================================================\n");
-    printf("KeyGen (ms)           : %.6f\n", keygen_ms);
-    printf("Encrypt (ms)          : %.6f\n", encrypt_ms);
-    printf("Decrypt (ms)          : %.6f\n", decrypt_ms);
-    printf("=========================================================\n\n");
+    printf("=========================================================================\n");
+    printf("Msg(bits)\tKeyGen(ms)\tEncrypt(ms)\tDecrypt(ms)\n");
+    printf("-------------------------------------------------------------------------\n");
 
-    printf("CSV:\n");
-    printf("scheme,msg_bits,keygen_ms,encrypt_ms,decrypt_ms\n");
-    printf("libsodium_x25519,%d,%.6f,%.6f,%.6f\n", MSG_BYTES * 8, keygen_ms, encrypt_ms, decrypt_ms);
+    for (int s = 0; s < num_sizes; s++) {
+        int msg_bits = msg_sizes[s];
+        size_t msg_bytes = msg_bits / 8;
+        
+        uint8_t pk[crypto_box_PUBLICKEYBYTES];
+        uint8_t sk[crypto_box_SECRETKEYBYTES];
+        uint8_t *pt = calloc(msg_bytes, 1);
+        size_t ct_len = msg_bytes + crypto_box_SEALBYTES;
+        uint8_t *ct = malloc(ct_len);
+        uint8_t *dec = malloc(msg_bytes);
 
-    free(ct);
+        // --- KeyGen Benchmark ---
+        for(int i = 0; i < WARMUP_TRIALS; i++) crypto_box_keypair(pk, sk);
+        clock_gettime(CLOCK_MONOTONIC, &start);
+        for(int i = 0; i < BENCHMARK_TRIALS; i++) crypto_box_keypair(pk, sk);
+        clock_gettime(CLOCK_MONOTONIC, &end);
+        double keygen_ms = calc_avg_ms(start, end, BENCHMARK_TRIALS);
+
+        // --- Encrypt (Seal) Benchmark ---
+        for(int i = 0; i < WARMUP_TRIALS; i++) crypto_box_seal(ct, pt, msg_bytes, pk);
+        clock_gettime(CLOCK_MONOTONIC, &start);
+        for(int i = 0; i < BENCHMARK_TRIALS; i++) crypto_box_seal(ct, pt, msg_bytes, pk);
+        clock_gettime(CLOCK_MONOTONIC, &end);
+        double encrypt_ms = calc_avg_ms(start, end, BENCHMARK_TRIALS);
+
+        // --- Decrypt (Seal Open) Benchmark ---
+        for(int i = 0; i < WARMUP_TRIALS; i++) crypto_box_seal_open(dec, ct, ct_len, pk, sk);
+        clock_gettime(CLOCK_MONOTONIC, &start);
+        for(int i = 0; i < BENCHMARK_TRIALS; i++) {
+            crypto_box_seal_open(dec, ct, ct_len, pk, sk);
+        }
+        clock_gettime(CLOCK_MONOTONIC, &end);
+        double decrypt_ms = calc_avg_ms(start, end, BENCHMARK_TRIALS);
+
+        printf("%d\t\t%.6f\t%.6f\t%.6f\n", msg_bits, keygen_ms, encrypt_ms, decrypt_ms);
+
+        free(pt); free(ct); free(dec);
+    }
+    printf("=========================================================================\n");
     return 0;
 }
