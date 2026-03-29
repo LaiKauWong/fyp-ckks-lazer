@@ -50,7 +50,7 @@ int main(void) {
     
     for (int p = 0; p < 3; p++) {
         size_t pt_len = pt_bits[p] / 8;
-        unsigned char pt[32];
+        unsigned char *pt = malloc(pt_len);
         for(size_t i = 0; i < pt_len; i++) pt[i] = i & 0xFF;
 
         size_t ct_len = pt_len + crypto_box_SEALBYTES;
@@ -71,13 +71,23 @@ int main(void) {
 
         // --- Decrypt Benchmark ---
         double t_dec = 0;
-        for (int i = 0; i < WARMUP_TRIALS; i++) crypto_box_seal_open(dec, ct, ct_len, pk, sk);
-        clock_gettime(CLOCK_MONOTONIC, &s);
-        for (int i = 0; i < NTRIALS; i++) {
-            if (crypto_box_seal_open(dec, ct, ct_len, pk, sk) != 0) {
-                fprintf(stderr, "Decrypt failed!\n"); return 1;
-            }
-        }
+        for (int i = 0; i < WARMUP_TRIALS; i++)
+          {
+            if (crypto_box_seal_open (dec, ct, ct_len, pk, sk) != 0)
+              {
+                fprintf (stderr, "Warmup decrypt failed!\n");
+                return 1;
+              }
+          }
+        clock_gettime (CLOCK_MONOTONIC, &s);
+        for (int i = 0; i < NTRIALS; i++)
+          {
+            if (crypto_box_seal_open (dec, ct, ct_len, pk, sk) != 0)
+              {
+                fprintf (stderr, "Decrypt failed!\n");
+                return 1;
+              }
+          }
         clock_gettime(CLOCK_MONOTONIC, &e);
         t_dec = diff_ms(s, e) / NTRIALS;
 
