@@ -4,7 +4,14 @@
 #include <time.h>
 #include <sodium.h>
 
-// 统一的 Benchmark 参数
+#ifndef CLOCK_MONOTONIC
+# ifdef CLOCK_REALTIME
+#  define CLOCK_MONOTONIC CLOCK_REALTIME
+# else
+#  define CLOCK_MONOTONIC 0
+# endif
+#endif
+
 #define NTRIALS 1000
 #define WARMUP_TRIALS 100
 
