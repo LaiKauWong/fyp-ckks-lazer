@@ -1,0 +1,80 @@
+=================================================================
+           Traditional PKE Benchmarks Summary
+           Date: Sun Mar 29 03:34:34 PM CST 2026
+=================================================================
+
+-----------------------------------------------------------------
+--> Executing: Libsodium X25519
+-----------------------------------------------------------------
+=== Benchmark: Libsodium Sealed Box (X25519 + XSalsa20-Poly1305) ===
+
+[Key Generation]
+PK Size : 32 bytes
+SK Size : 32 bytes
+Time    : 0.0287 ms
+
+[Payload:  64 bits ( 8 bytes)]
+CT Size : 56 bytes
+Encrypt : 0.0599 ms
+Decrypt : 0.0317 ms
+
+[Payload: 128 bits (16 bytes)]
+CT Size : 64 bytes
+Encrypt : 0.0599 ms
+Decrypt : 0.0317 ms
+
+[Payload: 256 bits (32 bytes)]
+CT Size : 80 bytes
+Encrypt : 0.0599 ms
+Decrypt : 0.0315 ms
+
+-----------------------------------------------------------------
+--> Executing: OpenSSL RSA-3072
+-----------------------------------------------------------------
+=== Benchmark: OpenSSL RSA-3072 (OAEP) ===
+
+[Key Generation]
+PK Size : 422 bytes (DER)
+SK Size : 1768 bytes (DER)
+Time    : 461.7419 ms
+
+[Payload:  64 bits ( 8 bytes)]
+CT Size : 384 bytes
+Encrypt : 0.0334 ms
+Decrypt : 0.6844 ms
+
+[Payload: 128 bits (16 bytes)]
+CT Size : 384 bytes
+Encrypt : 0.0334 ms
+Decrypt : 0.6819 ms
+
+[Payload: 256 bits (32 bytes)]
+CT Size : 384 bytes
+Encrypt : 0.0333 ms
+Decrypt : 0.6837 ms
+
+-----------------------------------------------------------------
+--> Executing: OpenSSL SM2
+-----------------------------------------------------------------
+=== Benchmark: OpenSSL SM2 (PKE) ===
+
+[Key Generation]
+PK Size : 91 bytes (DER)
+SK Size : 121 bytes (DER)
+Time    : 0.2483 ms
+
+[Payload:  64 bits ( 8 bytes)]
+CT Size : 116 bytes
+Encrypt : 0.4960 ms
+Decrypt : 0.2501 ms
+
+[Payload: 128 bits (16 bytes)]
+CT Size : 124 bytes
+Encrypt : 0.4983 ms
+Decrypt : 0.2482 ms
+
+[Payload: 256 bits (32 bytes)]
+CT Size : 141 bytes
+Encrypt : 0.5013 ms
+Decrypt : 0.2480 ms
+
