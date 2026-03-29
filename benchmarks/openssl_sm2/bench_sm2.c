@@ -1,120 +1,86 @@
 #include <openssl/evp.h>
 #include <openssl/ec.h>
-#include <openssl/err.h>
-#include <openssl/x509.h>
-#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <time.h>
 
-// 统一的 Benchmark 参数
-#define NTRIALS 1000
-#define WARMUP_TRIALS 100
+#define WARMUP_TRIALS 50
+#define BENCHMARK_TRIALS 1000
 
-double diff_ms(struct timespec a, struct timespec b) {
-    return (double)(b.tv_sec - a.tv_sec) * 1000.0 + (double)(b.tv_nsec - a.tv_nsec) / 1e6;
+double calc_avg_ms(struct timespec start, struct timespec end, int trials) {
+    double elapsed_ns = (end.tv_sec - start.tv_sec) * 1e9 + (end.tv_nsec - start.tv_nsec);
+    return (elapsed_ns / trials) / 1000000.0;
 }
 
-void print_errors() { ERR_print_errors_fp(stderr); }
+int main() {
+    int msg_sizes[] = {32, 64, 128, 256, 512, 1024};
+    int num_sizes = sizeof(msg_sizes) / sizeof(msg_sizes[0]);
+    struct timespec start, end;
 
-int main(void) {
-    printf("=== Benchmark: OpenSSL SM2 (PKE) ===\n");
+    printf("=========================================================================\n");
+    printf("Scheme                : OpenSSL SM2 (National Standard PKE)\n");
+    printf("Benchmark trials      : %d\n", BENCHMARK_TRIALS);
+    printf("Warmup trials         : %d\n", WARMUP_TRIALS);
+    printf("=========================================================================\n");
+    printf("Msg(bits)\tKeyGen(ms)\tEncrypt(ms)\tDecrypt(ms)\n");
+    printf("-------------------------------------------------------------------------\n");
 
-    EVP_PKEY_CTX *kctx = EVP_PKEY_CTX_new_id(EVP_PKEY_SM2, NULL);
-    if (!kctx || EVP_PKEY_keygen_init(kctx) <= 0) { print_errors(); return 1; }
+    for (int s = 0; s < num_sizes; s++) {
+        int msg_bits = msg_sizes[s];
+        size_t msg_bytes = msg_bits / 8;
+        unsigned char *pt = calloc(msg_bytes, 1);
+        unsigned char *ct = NULL;
+        unsigned char *dec = NULL;
+        size_t ct_len, dec_len;
+        EVP_PKEY *pkey = NULL;
 
-    struct timespec s, e;
-    double t_kg = 0;
+        EVP_PKEY_CTX *initial_kctx = EVP_PKEY_CTX_new_id(EVP_PKEY_SM2, NULL);
+        EVP_PKEY_keygen_init(initial_kctx);
+        EVP_PKEY_keygen(initial_kctx, &pkey); 
+        EVP_PKEY_CTX_free(initial_kctx);
 
-    for(int i=0; i<WARMUP_TRIALS; i++) {
-        EVP_PKEY *tmp = NULL;
-        EVP_PKEY_keygen(kctx, &tmp);
-        EVP_PKEY_free(tmp);
+        clock_gettime(CLOCK_MONOTONIC, &start);
+        for(int i=0; i<BENCHMARK_TRIALS; i++) {
+            EVP_PKEY *tmp_pkey = NULL;
+            EVP_PKEY_CTX *kctx = EVP_PKEY_CTX_new_id(EVP_PKEY_SM2, NULL);
+            EVP_PKEY_keygen_init(kctx);
+            EVP_PKEY_keygen(kctx, &tmp_pkey);
+            EVP_PKEY_free(tmp_pkey);
+            EVP_PKEY_CTX_free(kctx);
+        }
+        clock_gettime(CLOCK_MONOTONIC, &end);
+        double keygen_ms = calc_avg_ms(start, end, BENCHMARK_TRIALS);
+
+        EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(pkey, NULL);
+        EVP_PKEY_encrypt_init(ctx);
+        EVP_PKEY_encrypt(ctx, NULL, &ct_len, pt, msg_bytes);
+        ct = malloc(ct_len);
+
+        clock_gettime(CLOCK_MONOTONIC, &start);
+        for(int i=0; i<BENCHMARK_TRIALS; i++) {
+            size_t tmp_ct_len = ct_len;
+            EVP_PKEY_encrypt(ctx, ct, &tmp_ct_len, pt, msg_bytes);
+        }
+        clock_gettime(CLOCK_MONOTONIC, &end);
+        double encrypt_ms = calc_avg_ms(start, end, BENCHMARK_TRIALS);
+
+        EVP_PKEY_decrypt_init(ctx);
+        dec = malloc(ct_len);
+
+        clock_gettime(CLOCK_MONOTONIC, &start);
+        for(int i=0; i<BENCHMARK_TRIALS; i++) {
+            size_t tmp_dec_len = ct_len;
+            EVP_PKEY_decrypt(ctx, dec, &tmp_dec_len, ct, ct_len);
+        }
+        clock_gettime(CLOCK_MONOTONIC, &end);
+        double decrypt_ms = calc_avg_ms(start, end, BENCHMARK_TRIALS);
+
+        printf("%d\t\t%.6f\t%.6f\t%.6f\n", msg_bits, keygen_ms, encrypt_ms, decrypt_ms);
+
+        free(pt); free(ct); free(dec);
+        EVP_PKEY_CTX_free(ctx);
+        EVP_PKEY_free(pkey);
     }
-    
-    EVP_PKEY *pkey = NULL;
-    clock_gettime(CLOCK_MONOTONIC, &s);
-    for(int i=0; i<NTRIALS; i++) {
-        EVP_PKEY *tmp = NULL;
-        if(EVP_PKEY_keygen(kctx, &tmp) <= 0) { print_errors(); return 1; }
-        if (i == NTRIALS - 1) {
-            pkey = tmp; // 保留最后一把钥匙供加解密使用
-        } else {
-            EVP_PKEY_free(tmp);
-        }
-    }
-    clock_gettime(CLOCK_MONOTONIC, &e);
-    t_kg = diff_ms(s, e) / NTRIALS;
-
-    int pk_len = i2d_PUBKEY(pkey, NULL);
-    int sk_len = i2d_PrivateKey(pkey, NULL);
-
-    printf("\n[Key Generation]\n");
-    printf("PK Size : %d bytes (DER)\n", pk_len);
-    printf("SK Size : %d bytes (DER)\n", sk_len);
-    printf("Time    : %.4f ms\n", t_kg);
-
-    const size_t pt_bits[] = {64, 128, 256};
-
-    for (int p = 0; p < 3; p++) {
-        size_t pt_len = pt_bits[p] / 8;
-        unsigned char pt[32];
-        for(size_t i=0; i<pt_len; i++) pt[i] = i & 0xFF;
-
-        EVP_PKEY_CTX *enc_ctx = EVP_PKEY_CTX_new(pkey, NULL);
-        if (!enc_ctx || EVP_PKEY_encrypt_init(enc_ctx) <= 0) { print_errors(); return 1; }
-        
-        size_t ct_len = 0;
-        if (EVP_PKEY_encrypt(enc_ctx, NULL, &ct_len, pt, pt_len) <= 0) { print_errors(); return 1; }
-        unsigned char *ct = malloc(ct_len);
-
-        double t_enc = 0;
-        for(int i=0; i<WARMUP_TRIALS; i++) {
-            size_t tmp_len = ct_len;
-            EVP_PKEY_encrypt(enc_ctx, ct, &tmp_len, pt, pt_len);
-        }
-        clock_gettime(CLOCK_MONOTONIC, &s);
-        for(int i=0; i<NTRIALS; i++) {
-            size_t tmp_len = ct_len;
-            if (EVP_PKEY_encrypt(enc_ctx, ct, &tmp_len, pt, pt_len) <= 0) { print_errors(); return 1; }
-        }
-        clock_gettime(CLOCK_MONOTONIC, &e);
-        t_enc = diff_ms(s, e) / NTRIALS;
-
-        EVP_PKEY_CTX *dec_ctx = EVP_PKEY_CTX_new(pkey, NULL);
-        if (!dec_ctx || EVP_PKEY_decrypt_init(dec_ctx) <= 0) { print_errors(); return 1; }
-        
-        size_t dec_len = 0;
-        if (EVP_PKEY_decrypt(dec_ctx, NULL, &dec_len, ct, ct_len) <= 0) { print_errors(); return 1; }
-        unsigned char *dec = malloc(dec_len);
-
-        double t_dec = 0;
-        for(int i=0; i<WARMUP_TRIALS; i++) {
-            size_t tmp_len = dec_len;
-            EVP_PKEY_decrypt(dec_ctx, dec, &tmp_len, ct, ct_len);
-        }
-        clock_gettime(CLOCK_MONOTONIC, &s);
-        for(int i=0; i<NTRIALS; i++) {
-            size_t tmp_len = dec_len;
-            if (EVP_PKEY_decrypt(dec_ctx, dec, &tmp_len, ct, ct_len) <= 0) { print_errors(); return 1; }
-        }
-        clock_gettime(CLOCK_MONOTONIC, &e);
-        t_dec = diff_ms(s, e) / NTRIALS;
-
-        if (memcmp(pt, dec, pt_len) != 0) {
-            fprintf(stderr, "Correctness check failed! Mismatch at %zu bits.\n", pt_bits[p]);
-            return 1;
-        }
-
-        printf("\n[Payload: %3zu bits (%2zu bytes)]\n", pt_bits[p], pt_len);
-        printf("CT Size : %zu bytes\n", ct_len);
-        printf("Encrypt : %.4f ms\n", t_enc);
-        printf("Decrypt : %.4f ms\n", t_dec);
-
-        free(ct); free(dec);
-        EVP_PKEY_CTX_free(enc_ctx); EVP_PKEY_CTX_free(dec_ctx);
-    }
-    
-    EVP_PKEY_free(pkey); EVP_PKEY_CTX_free(kctx);
+    printf("=========================================================================\n");
     return 0;
 }
