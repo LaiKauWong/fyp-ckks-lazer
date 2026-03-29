@@ -1,14 +1,21 @@
-=========================================================================
-Scheme                : Libsodium X25519 (Sealed Box PKE)
-Benchmark trials      : 1000
-Warmup trials         : 50
-=========================================================================
-Msg(bits)	KeyGen(ms)	Encrypt(ms)	Decrypt(ms)
--------------------------------------------------------------------------
-32		0.028660	0.063689	0.031660
-64		0.028446	0.060148	0.031719
-128		0.028411	0.060078	0.031642
-256		0.028548	0.060077	0.031631
-512		0.028535	0.060407	0.031941
-1024		0.028473	0.060553	0.032224
-=========================================================================
+=== Benchmark: Libsodium Sealed Box (X25519 + XSalsa20-Poly1305) ===
+
+[Key Generation]
+PK Size : 32 bytes
+SK Size : 32 bytes
+Time    : 0.0226 ms
+
+[Payload:  64 bits ( 8 bytes)]
+CT Size : 56 bytes
+Encrypt : 0.0483 ms
+Decrypt : 0.0245 ms
+
+[Payload: 128 bits (16 bytes)]
+CT Size : 64 bytes
+Encrypt : 0.0463 ms
+Decrypt : 0.0241 ms
+
+[Payload: 256 bits (32 bytes)]
+CT Size : 80 bytes
+Encrypt : 0.0512 ms
+Decrypt : 0.0266 ms

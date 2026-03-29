@@ -4,12 +4,20 @@
 #include <time.h>
 #include <sodium.h>
 
-// 统一的 Benchmark 参数
+#ifndef CLOCK_MONOTONIC
+# ifdef CLOCK_REALTIME
+#  define CLOCK_MONOTONIC CLOCK_REALTIME
+# else
+#  define CLOCK_MONOTONIC 0
+# endif
+#endif
+
 #define NTRIALS 1000
 #define WARMUP_TRIALS 100
 
 double diff_ms(struct timespec a, struct timespec b) {
-    return (double)(b.tv_sec - a.tv_sec) * 1000.0 + (double)(b.tv_nsec - a.tv_nsec) / 1e6;
+    return (double)(b.tv_sec - a.tv_sec) * 1000.0 +
+           (double)(b.tv_nsec - a.tv_nsec) / 1e6;
 }
 
 int main(void) {
@@ -23,10 +31,14 @@ int main(void) {
     unsigned char pk[crypto_box_PUBLICKEYBYTES];
     unsigned char sk[crypto_box_SECRETKEYBYTES];
 
-    // --- KeyGen Benchmark ---
     struct timespec s, e;
-    double t_kg = 0;
-    for (int i = 0; i < WARMUP_TRIALS; i++) crypto_box_keypair(pk, sk);
+    double t_kg = 0.0;
+
+    // --- KeyGen Benchmark ---
+    for (int i = 0; i < WARMUP_TRIALS; i++) {
+        crypto_box_keypair(pk, sk);
+    }
+
     clock_gettime(CLOCK_MONOTONIC, &s);
     for (int i = 0; i < NTRIALS; i++) {
         crypto_box_keypair(pk, sk);
@@ -40,35 +52,81 @@ int main(void) {
     printf("Time    : %.4f ms\n", t_kg);
 
     const size_t pt_bits[] = {64, 128, 256};
-    
+
     for (int p = 0; p < 3; p++) {
         size_t pt_len = pt_bits[p] / 8;
-        unsigned char pt[32];
-        for(size_t i = 0; i < pt_len; i++) pt[i] = i & 0xFF;
 
+        unsigned char *pt = malloc(pt_len);
         size_t ct_len = pt_len + crypto_box_SEALBYTES;
         unsigned char *ct = malloc(ct_len);
         unsigned char *dec = malloc(pt_len);
 
+        if (pt == NULL || ct == NULL || dec == NULL) {
+            fprintf(stderr, "Allocation failed!\n");
+            free(pt);
+            free(ct);
+            free(dec);
+            return 1;
+        }
+
+        for (size_t i = 0; i < pt_len; i++) {
+            pt[i] = (unsigned char)(i & 0xFF);
+        }
+
         // --- Encrypt Benchmark ---
-        double t_enc = 0;
-        for (int i = 0; i < WARMUP_TRIALS; i++) crypto_box_seal(ct, pt, pt_len, pk);
+        double t_enc = 0.0;
+        for (int i = 0; i < WARMUP_TRIALS; i++) {
+            if (crypto_box_seal(ct, pt, pt_len, pk) != 0) {
+                fprintf(stderr, "Warmup encrypt failed!\n");
+                free(pt);
+                free(ct);
+                free(dec);
+                return 1;
+            }
+        }
+
         clock_gettime(CLOCK_MONOTONIC, &s);
         for (int i = 0; i < NTRIALS; i++) {
             if (crypto_box_seal(ct, pt, pt_len, pk) != 0) {
-                fprintf(stderr, "Encrypt failed!\n"); return 1;
+                fprintf(stderr, "Encrypt failed!\n");
+                free(pt);
+                free(ct);
+                free(dec);
+                return 1;
             }
         }
         clock_gettime(CLOCK_MONOTONIC, &e);
         t_enc = diff_ms(s, e) / NTRIALS;
 
+        // Prepare one explicit ciphertext for decrypt benchmark
+        if (crypto_box_seal(ct, pt, pt_len, pk) != 0) {
+            fprintf(stderr, "Prep encrypt failed!\n");
+            free(pt);
+            free(ct);
+            free(dec);
+            return 1;
+        }
+
         // --- Decrypt Benchmark ---
-        double t_dec = 0;
-        for (int i = 0; i < WARMUP_TRIALS; i++) crypto_box_seal_open(dec, ct, ct_len, pk, sk);
+        double t_dec = 0.0;
+        for (int i = 0; i < WARMUP_TRIALS; i++) {
+            if (crypto_box_seal_open(dec, ct, ct_len, pk, sk) != 0) {
+                fprintf(stderr, "Warmup decrypt failed!\n");
+                free(pt);
+                free(ct);
+                free(dec);
+                return 1;
+            }
+        }
+
         clock_gettime(CLOCK_MONOTONIC, &s);
         for (int i = 0; i < NTRIALS; i++) {
             if (crypto_box_seal_open(dec, ct, ct_len, pk, sk) != 0) {
-                fprintf(stderr, "Decrypt failed!\n"); return 1;
+                fprintf(stderr, "Decrypt failed!\n");
+                free(pt);
+                free(ct);
+                free(dec);
+                return 1;
             }
         }
         clock_gettime(CLOCK_MONOTONIC, &e);
@@ -76,6 +134,9 @@ int main(void) {
 
         if (memcmp(pt, dec, pt_len) != 0) {
             fprintf(stderr, "Correctness check failed! Mismatch at %zu bits.\n", pt_bits[p]);
+            free(pt);
+            free(ct);
+            free(dec);
             return 1;
         }
 
@@ -84,7 +145,10 @@ int main(void) {
         printf("Encrypt : %.4f ms\n", t_enc);
         printf("Decrypt : %.4f ms\n", t_dec);
 
-        free(ct); free(dec);
+        free(pt);
+        free(ct);
+        free(dec);
     }
+
     return 0;
 }
