@@ -54,9 +54,9 @@ int main(void) {
     printf("SK Size : %d bytes (DER)\n", sk_len);
     printf("Time    : %.4f ms\n", t_kg);
 
-    const size_t pt_bits[] = {64, 128, 256};
+    const size_t pt_bits[] = {256}; //modified from {64, 128, 256}
 
-    for (int p = 0; p < 3; p++) {
+    for (int p = 0; p < 1; p++) { //modified from p < 3
         size_t pt_len = pt_bits[p] / 8;
         unsigned char pt[32];
         for(size_t i=0; i<pt_len; i++) pt[i] = i & 0xFF;
