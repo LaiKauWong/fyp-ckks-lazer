@@ -1,0 +1,13 @@
+diff --git a/Makefile.linux b/Makefile.linux
+index af599ae..d2b4916 100644
+--- a/Makefile.linux
++++ b/Makefile.linux
+@@ -23,7 +23,7 @@ endif
+ 
+ # set CFLAGS depending on SIMD
+ CFLAGS?=-g
+-CFLAGS+=-Wall -Wextra -Wno-unused-parameter
++CFLAGS+=-Wall -Wextra -Wno-unused-parameter -fgnu89-inline -fcommon
+ ifeq ($(SIMD), ssse3)
+     CFLAGS+=-mssse3
+ else ifeq ($(SIMD), avx2)
