@@ -13,7 +13,7 @@
 #endif
 
 #define NTRIALS 1000
-#define WARMUP_TRIALS 50
+#define WARMUP_TRIALS 100
 
 double diff_ms(struct timespec a, struct timespec b) {
     return (double)(b.tv_sec - a.tv_sec) * 1000.0 +
@@ -25,6 +25,8 @@ int main(void) {
         fprintf(stderr, "libsodium init failed\n");
         return 1;
     }
+
+    printf("=== Benchmark: Libsodium Sealed Box (X25519 + XSalsa20-Poly1305) ===\n");
 
     unsigned char pk[crypto_box_PUBLICKEYBYTES];
     unsigned char sk[crypto_box_SECRETKEYBYTES];
@@ -43,6 +45,11 @@ int main(void) {
     }
     clock_gettime(CLOCK_MONOTONIC, &e);
     t_kg = diff_ms(s, e) / NTRIALS;
+
+    printf("\n[Key Generation]\n");
+    printf("PK Size : %d bytes\n", crypto_box_PUBLICKEYBYTES);
+    printf("SK Size : %d bytes\n", crypto_box_SECRETKEYBYTES);
+    printf("Time    : %.4f ms\n", t_kg);
 
     const size_t pt_bits[] = {256}; //modified from {64, 128, 256}
 
@@ -133,26 +140,10 @@ int main(void) {
             return 1;
         }
 
-        printf("=========================================================\n");
-        printf("Libsodium Benchmark\n");
-        printf("=========================================================\n");
-        printf("Scheme                : X25519+XSalsa20-Poly1305\n");
-        printf("Plaintext size        : %zu bits (%zu bytes)\n", pt_bits[p], pt_len);
-        printf("Public key size       : %d bytes\n", crypto_box_PUBLICKEYBYTES);
-        printf("Private key size      : %d bytes\n", crypto_box_SECRETKEYBYTES);
-        printf("Ciphertext size       : %zu bytes\n", ct_len);
-        printf("Encryption seed size  : internal RNG\n");
-        printf("Benchmark trials      : %d\n", NTRIALS);
-        printf("Warmup trials         : %d\n", WARMUP_TRIALS);
-        printf("=========================================================\n");
-        printf("KeyGen (ms)           : %0.6f\n", t_kg);
-        printf("Encrypt (ms)          : %0.6f\n", t_enc);
-        printf("Decrypt (ms)          : %0.6f\n", t_dec);
-        printf("=========================================================\n\n");
-        printf("CSV:\n");
-        printf("scheme,msg_bits,keygen_ms,encrypt_ms,decrypt_ms,pk_bytes,sk_bytes,ct_bytes\n");
-        printf("libsodium_x25519,%zu,%0.6f,%0.6f,%0.6f,%d,%d,%zu\n", 
-               pt_bits[p], t_kg, t_enc, t_dec, crypto_box_PUBLICKEYBYTES, crypto_box_SECRETKEYBYTES, ct_len);
+        printf("\n[Payload: %3zu bits (%2zu bytes)]\n", pt_bits[p], pt_len);
+        printf("CT Size : %zu bytes\n", ct_len);
+        printf("Encrypt : %.4f ms\n", t_enc);
+        printf("Decrypt : %.4f ms\n", t_dec);
 
         free(pt);
         free(ct);

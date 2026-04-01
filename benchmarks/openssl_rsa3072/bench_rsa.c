@@ -9,7 +9,7 @@
 
 // 统一的 Benchmark 参数
 #define NTRIALS 1000
-#define WARMUP_TRIALS 50
+#define WARMUP_TRIALS 100
 
 double diff_ms(struct timespec a, struct timespec b) {
     return (double)(b.tv_sec - a.tv_sec) * 1000.0 + (double)(b.tv_nsec - a.tv_nsec) / 1e6;
@@ -18,6 +18,7 @@ double diff_ms(struct timespec a, struct timespec b) {
 void print_errors() { ERR_print_errors_fp(stderr); }
 
 int main(void) {
+    printf("=== Benchmark: OpenSSL RSA-3072 (OAEP) ===\n");
 
     EVP_PKEY_CTX *kctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
     if (!kctx || EVP_PKEY_keygen_init(kctx) <= 0 || 
@@ -49,9 +50,14 @@ int main(void) {
     int pk_len = i2d_PUBKEY(pkey, NULL);
     int sk_len = i2d_PrivateKey(pkey, NULL);
 
-    const size_t pt_bits[] = {256};
+    printf("\n[Key Generation]\n");
+    printf("PK Size : %d bytes (DER)\n", pk_len);
+    printf("SK Size : %d bytes (DER)\n", sk_len);
+    printf("Time    : %.4f ms\n", t_kg);
 
-    for (int p = 0; p < 1; p++) {
+    const size_t pt_bits[] = {64, 128, 256};
+
+    for (int p = 0; p < 3; p++) {
         size_t pt_len = pt_bits[p] / 8;
         unsigned char pt[32];
         for(size_t i=0; i<pt_len; i++) pt[i] = i ^ 0xAA;
@@ -103,26 +109,10 @@ int main(void) {
             return 1;
         }
 
-        printf("=========================================================\n");
-        printf("OpenSSL RSA Benchmark\n");
-        printf("=========================================================\n");
-        printf("Scheme                : RSA-3072 (OAEP)\n");
-        printf("Plaintext size        : %zu bits (%zu bytes)\n", pt_bits[p], pt_len);
-        printf("Public key size       : %d bytes\n", pk_len);
-        printf("Private key size      : %d bytes\n", sk_len);
-        printf("Ciphertext size       : %zu bytes\n", ct_len);
-        printf("Encryption seed size  : internal RNG\n");
-        printf("Benchmark trials      : %d\n", NTRIALS);
-        printf("Warmup trials         : %d\n", WARMUP_TRIALS);
-        printf("=========================================================\n");
-        printf("KeyGen (ms)           : %0.6f\n", t_kg);
-        printf("Encrypt (ms)          : %0.6f\n", t_enc);
-        printf("Decrypt (ms)          : %0.6f\n", t_dec);
-        printf("=========================================================\n\n");
-        printf("CSV:\n");
-        printf("scheme,msg_bits,keygen_ms,encrypt_ms,decrypt_ms,pk_bytes,sk_bytes,ct_bytes\n");
-        printf("openssl_rsa3072,%zu,%0.6f,%0.6f,%0.6f,%d,%d,%zu\n", 
-               pt_bits[p], t_kg, t_enc, t_dec, pk_len, sk_len, ct_len);
+        printf("\n[Payload: %3zu bits (%2zu bytes)]\n", pt_bits[p], pt_len);
+        printf("CT Size : %zu bytes\n", ct_len);
+        printf("Encrypt : %.4f ms\n", t_enc);
+        printf("Decrypt : %.4f ms\n", t_dec);
 
         free(ct); free(dec);
         EVP_PKEY_CTX_free(enc_ctx); EVP_PKEY_CTX_free(dec_ctx);
