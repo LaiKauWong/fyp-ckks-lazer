@@ -1,80 +1,77 @@
 =================================================================
            Traditional PKE Benchmarks Summary
-           Date: Sun Mar 29 03:34:34 PM CST 2026
+           Date: Wed Apr  1 08:41:58 PM CST 2026
 =================================================================
 
 -----------------------------------------------------------------
 --> Executing: Libsodium X25519
 -----------------------------------------------------------------
-=== Benchmark: Libsodium Sealed Box (X25519 + XSalsa20-Poly1305) ===
+=========================================================
+Libsodium Benchmark
+=========================================================
+Scheme                : X25519+XSalsa20-Poly1305
+Plaintext size        : 256 bits (32 bytes)
+Public key size       : 32 bytes
+Private key size      : 32 bytes
+Ciphertext size       : 80 bytes
+Encryption seed size  : internal RNG
+Benchmark trials      : 1000
+Warmup trials         : 50
+=========================================================
+KeyGen (ms)           : 0.032881
+Encrypt (ms)          : 0.065730
+Decrypt (ms)          : 0.034923
+=========================================================
 
-[Key Generation]
-PK Size : 32 bytes
-SK Size : 32 bytes
-Time    : 0.0287 ms
-
-[Payload:  64 bits ( 8 bytes)]
-CT Size : 56 bytes
-Encrypt : 0.0599 ms
-Decrypt : 0.0317 ms
-
-[Payload: 128 bits (16 bytes)]
-CT Size : 64 bytes
-Encrypt : 0.0599 ms
-Decrypt : 0.0317 ms
-
-[Payload: 256 bits (32 bytes)]
-CT Size : 80 bytes
-Encrypt : 0.0599 ms
-Decrypt : 0.0315 ms
+CSV:
+scheme,msg_bits,keygen_ms,encrypt_ms,decrypt_ms,pk_bytes,sk_bytes,ct_bytes
+libsodium_x25519,256,0.032881,0.065730,0.034923,32,32,80
 
 -----------------------------------------------------------------
 --> Executing: OpenSSL RSA-3072
 -----------------------------------------------------------------
-=== Benchmark: OpenSSL RSA-3072 (OAEP) ===
+=========================================================
+OpenSSL RSA Benchmark
+=========================================================
+Scheme                : RSA-3072 (OAEP)
+Plaintext size        : 256 bits (32 bytes)
+Public key size       : 422 bytes
+Private key size      : 1769 bytes
+Ciphertext size       : 384 bytes
+Encryption seed size  : internal RNG
+Benchmark trials      : 1000
+Warmup trials         : 50
+=========================================================
+KeyGen (ms)           : 761.184914
+Encrypt (ms)          : 0.033575
+Decrypt (ms)          : 0.687507
+=========================================================
 
-[Key Generation]
-PK Size : 422 bytes (DER)
-SK Size : 1768 bytes (DER)
-Time    : 461.7419 ms
-
-[Payload:  64 bits ( 8 bytes)]
-CT Size : 384 bytes
-Encrypt : 0.0334 ms
-Decrypt : 0.6844 ms
-
-[Payload: 128 bits (16 bytes)]
-CT Size : 384 bytes
-Encrypt : 0.0334 ms
-Decrypt : 0.6819 ms
-
-[Payload: 256 bits (32 bytes)]
-CT Size : 384 bytes
-Encrypt : 0.0333 ms
-Decrypt : 0.6837 ms
+CSV:
+scheme,msg_bits,keygen_ms,encrypt_ms,decrypt_ms,pk_bytes,sk_bytes,ct_bytes
+openssl_rsa3072,256,761.184914,0.033575,0.687507,422,1769,384
 
 -----------------------------------------------------------------
 --> Executing: OpenSSL SM2
 -----------------------------------------------------------------
-=== Benchmark: OpenSSL SM2 (PKE) ===
+=========================================================
+OpenSSL SM2 Benchmark
+=========================================================
+Scheme                : SM2.PKE
+Plaintext size        : 256 bits (32 bytes)
+Public key size       : 91 bytes
+Private key size      : 121 bytes
+Ciphertext size       : 141 bytes
+Encryption seed size  : internal RNG
+Benchmark trials      : 1000
+Warmup trials         : 50
+=========================================================
+KeyGen (ms)           : 0.251886
+Encrypt (ms)          : 0.494220
+Decrypt (ms)          : 0.249074
+=========================================================
 
-[Key Generation]
-PK Size : 91 bytes (DER)
-SK Size : 121 bytes (DER)
-Time    : 0.2483 ms
-
-[Payload:  64 bits ( 8 bytes)]
-CT Size : 116 bytes
-Encrypt : 0.4960 ms
-Decrypt : 0.2501 ms
-
-[Payload: 128 bits (16 bytes)]
-CT Size : 124 bytes
-Encrypt : 0.4983 ms
-Decrypt : 0.2482 ms
-
-[Payload: 256 bits (32 bytes)]
-CT Size : 141 bytes
-Encrypt : 0.5013 ms
-Decrypt : 0.2480 ms
+CSV:
+scheme,msg_bits,keygen_ms,encrypt_ms,decrypt_ms,pk_bytes,sk_bytes,ct_bytes
+openssl_sm2,256,0.251886,0.494220,0.249074,91,121,141
 
