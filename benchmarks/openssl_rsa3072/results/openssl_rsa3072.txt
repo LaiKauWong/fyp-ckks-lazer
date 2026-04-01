@@ -1,0 +1,20 @@
+=========================================================
+OpenSSL RSA Benchmark
+=========================================================
+Scheme                : RSA-3072 (OAEP)
+Plaintext size        : 256 bits (32 bytes)
+Public key size       : 422 bytes
+Private key size      : 1766 bytes
+Ciphertext size       : 384 bytes
+Encryption seed size  : internal RNG
+Benchmark trials      : 1000
+Warmup trials         : 50
+=========================================================
+KeyGen (ms)           : 758.234766
+Encrypt (ms)          : 0.053654
+Decrypt (ms)          : 0.866035
+=========================================================
+
+CSV:
+scheme,msg_bits,keygen_ms,encrypt_ms,decrypt_ms,pk_bytes,sk_bytes,ct_bytes
+openssl_rsa3072,256,758.234766,0.053654,0.866035,422,1766,384
