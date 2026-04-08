@@ -10,11 +10,11 @@ Encryption seed size  : internal RNG
 Benchmark trials      : 1000
 Warmup trials         : 50
 =========================================================
-KeyGen (ms)           : 0.028462
-Encrypt (ms)          : 0.059994
-Decrypt (ms)          : 0.031559
+KeyGen (ms)           : 0.022893
+Encrypt (ms)          : 0.050620
+Decrypt (ms)          : 0.025266
 =========================================================
 
 CSV:
 scheme,msg_bits,keygen_ms,encrypt_ms,decrypt_ms,pk_bytes,sk_bytes,ct_bytes
-libsodium_x25519,256,0.028462,0.059994,0.031559,32,32,80
+libsodium_x25519,256,0.022893,0.050620,0.025266,32,32,80

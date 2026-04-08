@@ -17,7 +17,13 @@ LDLIBS   := ./third_party/hexl-development/build/hexl/lib/libhexl.a -lmpfr -lgmp
 SRC_DIR := src/public_key_encryption
 PY_DIR  := python/public_key_encryption
 
-CORE_SRC   := $(SRC_DIR)/module_lwe_pke.c
+# Default core source = baseline version
+CORE_SRC ?= $(SRC_DIR)/module_lwe_pke.c
+
+# Experimental variants
+CORE_SRC_PACK2 := $(SRC_DIR)/module_lwe_pke_pack2.c
+CORE_SRC_PACK4 := $(SRC_DIR)/module_lwe_pke_pack4.c
+
 BRIDGE_SRC := $(SRC_DIR)/bridge_module_lwe_pke.c
 TEST_SRC   := $(SRC_DIR)/module_lwe_pke_test.c
 BENCH_SRC  := $(SRC_DIR)/module_lwe_pke_bench.c
@@ -31,7 +37,13 @@ SHARED_LIB := libmodule_lwe.so
 TEST_BIN   := lwe_test
 BENCH_BIN  := bench_pke
 
-.PHONY: all lib test bench demo input sentence clean check
+.PHONY: all lib test bench demo input sentence clean check \
+        bench-pack2 bench-pack4 \
+        test-pack2 test-pack4 \
+        lib-pack2 lib-pack4 \
+        demo-pack2 demo-pack4 \
+        input-pack2 input-pack4 \
+        sentence-pack2 sentence-pack4
 
 all: lib test bench
 
@@ -74,6 +86,64 @@ input: lib
 	python3 $(PY_DIR)/demo_input_pke.py
 
 sentence: lib
+	python3 $(PY_DIR)/demo_sentence.py
+
+# =========================================================
+# Experimental variants
+# =========================================================
+
+lib-pack2:
+	$(MAKE) -f Makefile.pke clean
+	$(MAKE) -f Makefile.pke lib CORE_SRC=$(CORE_SRC_PACK2)
+
+lib-pack4:
+	$(MAKE) -f Makefile.pke clean
+	$(MAKE) -f Makefile.pke lib CORE_SRC=$(CORE_SRC_PACK4)
+
+test-pack2:
+	$(MAKE) -f Makefile.pke clean
+	$(MAKE) -f Makefile.pke test CORE_SRC=$(CORE_SRC_PACK2)
+
+test-pack4:
+	$(MAKE) -f Makefile.pke clean
+	$(MAKE) -f Makefile.pke test CORE_SRC=$(CORE_SRC_PACK4)
+
+bench-pack2:
+	$(MAKE) -f Makefile.pke clean
+	$(MAKE) -f Makefile.pke bench CORE_SRC=$(CORE_SRC_PACK2)
+
+bench-pack4:
+	$(MAKE) -f Makefile.pke clean
+	$(MAKE) -f Makefile.pke bench CORE_SRC=$(CORE_SRC_PACK4)
+
+demo-pack2:
+	$(MAKE) -f Makefile.pke clean
+	$(MAKE) -f Makefile.pke lib CORE_SRC=$(CORE_SRC_PACK2)
+	python3 $(PY_DIR)/demo_pke.py
+
+demo-pack4:
+	$(MAKE) -f Makefile.pke clean
+	$(MAKE) -f Makefile.pke lib CORE_SRC=$(CORE_SRC_PACK4)
+	python3 $(PY_DIR)/demo_pke.py
+
+input-pack2:
+	$(MAKE) -f Makefile.pke clean
+	$(MAKE) -f Makefile.pke lib CORE_SRC=$(CORE_SRC_PACK2)
+	python3 $(PY_DIR)/demo_input_pke.py
+
+input-pack4:
+	$(MAKE) -f Makefile.pke clean
+	$(MAKE) -f Makefile.pke lib CORE_SRC=$(CORE_SRC_PACK4)
+	python3 $(PY_DIR)/demo_input_pke.py
+
+sentence-pack2:
+	$(MAKE) -f Makefile.pke clean
+	$(MAKE) -f Makefile.pke lib CORE_SRC=$(CORE_SRC_PACK2)
+	python3 $(PY_DIR)/demo_sentence.py
+
+sentence-pack4:
+	$(MAKE) -f Makefile.pke clean
+	$(MAKE) -f Makefile.pke lib CORE_SRC=$(CORE_SRC_PACK4)
 	python3 $(PY_DIR)/demo_sentence.py
 
 clean:

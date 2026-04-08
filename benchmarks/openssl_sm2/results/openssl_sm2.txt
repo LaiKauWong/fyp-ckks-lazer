@@ -10,11 +10,11 @@ Encryption seed size  : internal RNG
 Benchmark trials      : 1000
 Warmup trials         : 50
 =========================================================
-KeyGen (ms)           : 0.255430
-Encrypt (ms)          : 0.493239
-Decrypt (ms)          : 0.248138
+KeyGen (ms)           : 0.173006
+Encrypt (ms)          : 0.346251
+Decrypt (ms)          : 0.181369
 =========================================================
 
 CSV:
 scheme,msg_bits,keygen_ms,encrypt_ms,decrypt_ms,pk_bytes,sk_bytes,ct_bytes
-openssl_sm2,256,0.255430,0.493239,0.248138,91,121,141
+openssl_sm2,256,0.173006,0.346251,0.181369,91,121,141

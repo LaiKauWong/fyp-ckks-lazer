@@ -10,11 +10,11 @@ Encryption seed size  : 32 bytes
 Benchmark trials      : 1000
 Warmup trials         : 50
 =========================================================
-KeyGen (ms)           : 0.015687
-Encrypt (ms)          : 0.007276
-Decrypt (ms)          : 0.001937
+KeyGen (ms)           : 0.013878
+Encrypt (ms)          : 0.006713
+Decrypt (ms)          : 0.001731
 =========================================================
 
 CSV:
 scheme,msg_bits,keygen_ms,encrypt_ms,decrypt_ms,pk_bytes,sk_bytes,ct_bytes
-circl_kyber512,256,0.015687,0.007276,0.001937,800,768,768
+circl_kyber512,256,0.013878,0.006713,0.001731,800,768,768
