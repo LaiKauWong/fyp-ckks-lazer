@@ -10,11 +10,11 @@ Encryption seed size  : internal RNG
 Benchmark trials      : 1000
 Warmup trials         : 50
 =========================================================
-KeyGen (ms)           : 0.077336
-Encrypt (ms)          : 0.005354
-Decrypt (ms)          : 0.006087
+KeyGen (ms)           : 0.073009
+Encrypt (ms)          : 0.005607
+Decrypt (ms)          : 0.006132
 =========================================================
 
 CSV:
 scheme,msg_bits,keygen_ms,encrypt_ms,decrypt_ms,pk_bytes,sk_bytes,ct_bytes
-libntru_EES443EP1,256,0.077336,0.005354,0.006087,614,68,610
+libntru_EES443EP1,256,0.073009,0.005607,0.006132,614,68,610
